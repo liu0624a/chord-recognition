@@ -1,0 +1,1184 @@
+:root {
+  --bg: #0f1216;
+  --surface: #171c23;
+  --surface-2: #1e2530;
+  --border: #2a3342;
+  --text: #e7ecf3;
+  --text-dim: #93a0b4;
+  --accent: #4f8cff;
+  --accent-soft: rgba(79, 140, 255, 0.18);
+  --danger: #ff6b6b;
+  --warn: #ffc857;
+  --ok: #4ade80;
+  --white-key: #f4f6fa;
+  --white-key-active: #4f8cff;
+  --black-key: #1a1f28;
+  --black-key-active: #3b76e8;
+  --key-label: #5a6577;
+  --fret: #202a38;
+  --fret-active: #4f8cff;
+  --fret-dot: #2c3949;
+  --staff-line: #5a6577;
+  --range-guitar: #6e93a8;
+  --range-ukulele: #a98b5e;
+}
+
+:root[data-theme='light'] {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #eef1f6;
+  --border: #d8dee8;
+  --text: #1a2230;
+  --text-dim: #5a6577;
+  --accent: #2f6fed;
+  --accent-soft: rgba(47, 111, 237, 0.12);
+  --white-key: #ffffff;
+  --black-key: #232a35;
+  --key-label: #9aa4b4;
+  --fret: #dde3ec;
+  --fret-active: #2f6fed;
+  --fret-dot: #c9d2e0;
+  --staff-line: #9aa4b4;
+  --range-guitar: #55768c;
+  --range-ukulele: #8f7246;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The whole app spans the full browser width (no centered narrow column). Each
+   child below stretches to fill, so the interface reaches from the left edge to
+   the right while the 16px side padding keeps content off the window edges. */
+.app {
+  width: 100%;
+  padding: 16px 16px 48px;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.toolbar__title {
+  font-size: 1.3rem;
+  margin: 0;
+  letter-spacing: 0.5px;
+  margin-right: auto;
+}
+
+.toolbar__instruments,
+.toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Room for the instrument buttons' outer (panel) outline rings. */
+.toolbar__instruments {
+  gap: 12px;
+}
+
+.icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.icon-btn[aria-pressed='true'],
+.icon-btn--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Instrument-button outline rings. The inner ring marks the current timbre and
+   the outer ring marks a visible panel; the two are the same stroke width but
+   differ in size and position (inside vs. outside the button), so they never
+   overlap. Color follows the theme accent. */
+.instrument-ring {
+  position: absolute;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+}
+.instrument-ring--timbre {
+  inset: 1px;
+  border-radius: 12px;
+}
+.instrument-ring--panel {
+  inset: -3px;
+  border-radius: 16px;
+}
+
+/* Instrument buttons mark their state with the outline rings only — never the
+   filled `--active` treatment used by the other toolbar buttons. */
+.icon-btn[data-instrument][aria-pressed='true'] {
+  background: transparent;
+  color: var(--text-dim);
+  border-color: transparent;
+}
+
+/* Icon-button tooltip */
+.icon-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-2px);
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s, transform 0.12s;
+  z-index: 20;
+}
+
+.icon-btn[data-tooltip]:hover::after,
+.icon-btn[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* MIDI (embedded in toolbar) */
+.midi {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.midi select {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 0.88rem;
+  max-width: 180px;
+}
+
+.midi__status {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.midi__error {
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+/* Buttons */
+.btn {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-dim);
+}
+
+.btn--ghost:hover {
+  color: var(--text);
+  border-color: transparent;
+}
+
+/* Main column */
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Notation row: staff on the left, chord result window on the right, side by
+   side on desktop at a strict 1:1 ratio (each half of the row after the gap).
+   Both flex equally so their widths stay identical no matter what either holds;
+   the staff scales down to fit its half and the chord window wraps internally. */
+.notation-row {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.notation-row .staff {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.notation-row .chord {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Chord display */
+.chord {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  margin-top: 10px;
+  padding: 20px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.chord__name {
+  font-size: 3.2rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  /* Reserve one line and wrap (rather than truncate) so the full name always
+     shows. The chord window itself has a fixed height (it stretches to the staff
+     row), so a wrapped second line stays inside it without resizing the 50/50
+     split or shifting the rest of the page. */
+  min-height: 3.6rem;
+  overflow-wrap: anywhere;
+}
+
+.chord__degree {
+  margin-top: 6px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1.2;
+  /* Reserve one line so the chord window stays fixed when no degree is shown. */
+  min-height: 1.8rem;
+  overflow-wrap: anywhere;
+}
+
+/* Quality marker (romanQuality mode) rides as a tight top-right superscript. */
+.chord__degree sup {
+  font-size: 0.68em;
+  line-height: 0;
+  vertical-align: super;
+  margin-left: 1px;
+}
+
+.chord__status {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  min-height: 30px;
+  box-sizing: border-box;
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+
+.chord__status--empty {
+  background: transparent;
+  color: transparent;
+}
+
+.chord__status--confident {
+  background: rgba(74, 222, 128, 0.14);
+  color: var(--ok);
+}
+
+.chord__status--ambiguous,
+.chord__status--partial {
+  background: rgba(255, 200, 87, 0.14);
+  color: var(--warn);
+}
+
+.chord__status--unknown,
+.chord__status--interval,
+.chord__status--note {
+  background: rgba(255, 107, 107, 0.14);
+  color: var(--danger);
+}
+
+.chord__composition {
+  margin-top: 8px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  /* Reserve one line so empty and filled rows are the same height; wrap long
+     tone lists onto extra lines inside the fixed-height window instead of
+     truncating, so nothing is cut off and the 1:1 width ratio is untouched. */
+  min-height: 1.5em;
+  overflow-wrap: anywhere;
+}
+
+.chord__alternatives {
+  margin-top: 6px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  min-height: 1.5em;
+  overflow-wrap: anywhere;
+}
+
+/* Chord window footer, pinned to the bottom: pedals on the left, the "Play
+   chord" controls on the right. It wraps gracefully when the window is narrow. */
+.chord__footer {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chord__play {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chord__play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.chord__play-btn:hover {
+  filter: brightness(1.08);
+}
+
+.chord__play-btn--stop {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.chord__play-mode {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.chord__play-mode button {
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chord__play-mode button[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.chord__selected {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+
+.chord__selected input[type='checkbox'] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.chord__preview-notes {
+  margin-top: 8px;
+  color: var(--accent);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  min-height: 1.4em;
+  overflow-wrap: anywhere;
+}
+
+/* Note list */
+.notelist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  min-height: 0;
+}
+
+.notelist__chip {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Staff */
+.staff {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.staff svg {
+  display: block;
+  /* Fluid width: shrink to fit the card as the window narrows so every note
+     stays fully on screen (no clipping or scroll), but never grow past the
+     natural 2× size (296 viewBox units × 2 ≈ 592px, capped at 560px) so the
+     staff stays readable. `height: auto` keeps the height proportional to the
+     viewBox. */
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+}
+
+.staff__line {
+  stroke: var(--staff-line);
+  stroke-width: 1;
+}
+
+.staff__notehead {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+/* Whole-note head: the ring between the outer and inner ovals is filled solid
+   (the inner oval stays blank via an even-odd cut-out). */
+.staff__notehead--whole {
+  fill: var(--text);
+}
+
+.staff__accidental {
+  fill: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Note-name label shown in the gutter to the right of the staff lines. */
+.staff__notename {
+  fill: var(--text-dim);
+  font-size: 7px;
+  font-weight: 600;
+}
+
+.staff__clef {
+  fill: var(--text);
+}
+
+.staff__key-label {
+  fill: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.staff__keysig {
+  fill: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.staff__pedal {
+  fill: var(--text-dim);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.staff__octave-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.staff__octave-toggle input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.staff__octave-line {
+  stroke: var(--text-dim);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.staff__octave-label {
+  fill: var(--text-dim);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Piano */
+.piano {
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.piano__keys {
+  position: relative;
+  height: 200px;
+  /* No minimum width: the 88 keys are percentage-positioned, so they stretch to
+     fill the full available width at any window size. All 88 keys are always
+     present — widening the window makes each key wider, never fewer keys. */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.key {
+  position: absolute;
+  top: 0;
+  border-radius: 0 0 4px 4px;
+  cursor: pointer;
+  /* Fast attack, slow fade-out: the highlight appears at once but a released
+     note fades out over a velocity-scaled duration instead of vanishing. */
+  transition:
+    background-color var(--fade-ms, 0.55s) ease-out,
+    border-color var(--fade-ms, 0.55s) ease-out,
+    box-shadow 0.25s ease-out;
+}
+
+.key--white {
+  bottom: 0;
+  background: var(--white-key);
+  border: 1px solid var(--border);
+  border-top: none;
+}
+
+.key--black {
+  height: 62%;
+  background: var(--black-key);
+  border: 1px solid #000;
+  z-index: 2;
+  border-top: none;
+}
+
+.key--active {
+  transition:
+    background-color 0.06s ease-out,
+    border-color 0.06s ease-out,
+    box-shadow 0.25s ease-out;
+}
+
+.key--white.key--active {
+  background: var(--white-key-active);
+  border-color: var(--white-key-active);
+}
+
+.key--black.key--active {
+  background: var(--black-key-active);
+  border-color: var(--black-key-active);
+}
+
+/* Soft "still held" ring for MIDI keys whose keys remain physically pressed. */
+.key--held {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+.key__label {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.68rem;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  color: var(--key-label);
+}
+
+.key--black .key__label {
+  color: #c6cdd8;
+  bottom: 5px;
+}
+
+/* "Both" labels stack the two enharmonic names vertically (C♯4 over D♭4), one
+   per line, so both fit fully inside the black key without sideways overflow. */
+.key__label--stack {
+  white-space: pre-line;
+  text-align: center;
+  line-height: 1.05;
+  font-size: 0.56rem;
+}
+
+.key--white.key--active .key__label,
+.key--black.key--active .key__label {
+  color: #fff;
+}
+
+/* Tonic marker for scale highlighting: the tonic key's note-name label is bolded. */
+.key__label--tonic {
+  font-weight: 700;
+}
+
+/* Instrument range indicators (thin bars under the piano showing each instrument's
+   fixed playable range). Minimal: 2px lines with short vertical end ticks, a left
+   label, and two low-saturation theme-coordinated colors. Purely decorative. */
+.range-indicators {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+  pointer-events: none;
+}
+
+.range {
+  position: relative;
+  height: 12px;
+}
+
+.range__label {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.68rem;
+  line-height: 1;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* Full-width track shares the piano's percentage coordinate space, so a bar's
+   left/width (computed from the same key geometry) lines up with the keys. */
+.range__track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.range__bar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--range-color);
+  border-radius: 1px;
+}
+
+/* Short vertical end markers at each bar's start/end. */
+.range__bar::before,
+.range__bar::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 8px;
+  transform: translateY(-50%);
+  background: var(--range-color);
+  border-radius: 1px;
+}
+
+.range__bar::before {
+  left: 0;
+}
+
+.range__bar::after {
+  right: 0;
+}
+
+.range[data-range='guitar'] {
+  --range-color: var(--range-guitar);
+}
+
+.range[data-range='ukulele'] {
+  --range-color: var(--range-ukulele);
+}
+
+/* Fretboard (geometric SVG: strings, frets, intersection hit targets) */
+.fretboard {
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.fretboard svg {
+  display: block;
+  /* Fill the full available width and scale the height to keep the viewBox
+     aspect ratio, so the fretboard spans the screen instead of a fixed size. */
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+}
+
+.fretboard__string {
+  stroke: var(--fret);
+  stroke-width: 2;
+}
+
+.fretboard__fret {
+  stroke: var(--fret-dot);
+  stroke-width: 1.5;
+}
+
+.fretboard__nut {
+  stroke: var(--text);
+  stroke-width: 3;
+}
+
+.fretboard__dot {
+  fill: var(--fret-dot);
+}
+
+.fretboard__fretnum {
+  fill: var(--text-dim);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.fretboard__label {
+  fill: var(--text-dim);
+  font-size: 12px;
+  text-anchor: end;
+}
+
+.fretboard__point {
+  outline: none;
+  cursor: pointer;
+}
+
+.fretboard__hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.fretboard__point:hover .fretboard__hit,
+.fretboard__point:focus-visible .fretboard__hit {
+  fill: var(--accent-soft);
+}
+
+.fretboard__mark {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.fretboard__inner {
+  position: relative;
+}
+
+.fretboard__tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 8px));
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Pedal bar (now rendered in the chord window's bottom-left corner) */
+.pedalbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.pedal-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pedal-btn:hover {
+  border-color: var(--accent);
+}
+
+.pedal-btn[aria-pressed='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Settings */
+.settings {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings__header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.settings__section h3 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+}
+
+.settings__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings__field label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.settings__field select,
+.settings__select {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 0.9rem;
+  max-width: 100%;
+}
+
+/* Illustrative example for the currently-selected degree display. */
+.settings__degree-example {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+/* Checkbox rows in the Recognition section (single-/two-note toggles). */
+.settings__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.settings__toggle input {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Theme accent color: swatch + RGB/HEX inputs + reset, laid out inline. */
+.theme-color {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-color__swatch {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.theme-color__swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.theme-color__swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+.theme-color__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theme-color__rgb,
+.theme-color__hex {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-color__rgb label,
+.theme-color__hex label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  min-width: 12px;
+}
+
+.theme-color__rgb input,
+.theme-color__hex input {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.theme-color__rgb input {
+  width: 54px;
+}
+
+.theme-color__hex input {
+  width: 84px;
+}
+
+.settings__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.settings__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.preset--active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.settings__group {
+  margin-bottom: 14px;
+}
+
+/* Key controls: Key State toggle + Accidental / Root Note / Mode selects, laid
+   out side by side (wrapping on narrow screens). All four share the same label,
+   height, and control styling as the other settings fields. */
+.key-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.key-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 160px;
+  min-width: 160px;
+}
+
+.key-control label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.key-control select {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 0.9rem;
+  max-width: 100%;
+}
+
+.key-state {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  text-align: left;
+}
+
+.key-state:hover {
+  border-color: var(--accent);
+}
+
+.key-state--active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.key-summary {
+  margin-top: 12px;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.settings__group h4 {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.settings__row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings__type {
+  font-size: 0.9rem;
+}
+
+.settings__preview {
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  /* Not enough room to sit side by side: stack staff above, chord result below. */
+  .notation-row {
+    flex-direction: column;
+  }
+
+  .notation-row .staff,
+  .notation-row .chord {
+    flex: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .chord__name {
+    font-size: 2.4rem;
+    min-height: 2.7rem;
+  }
+
+  .settings__row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .settings__preview {
+    display: none;
+  }
+
+  .toolbar__title {
+    flex-basis: 100%;
+  }
+}
